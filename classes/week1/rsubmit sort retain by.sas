@@ -100,3 +100,38 @@ lossyears = lossyears + (ni < 0);
 if last.gvkey then output;
 run;
 
+/* lets compute return on assets (ROA) and get some statistics: 
+   #obs per firm, mean, max and standard deviation ROA
+*/
+
+/* subsample */
+data roaInputs;
+set myCompTable;
+roa = ni / at;
+run;
+
+/* sort required */
+proc sort data=myCompTable2 nodupkey; by gvkey ;run;
+
+proc means data=roaInputs NOPRINT; /* suppress output to screen */
+  /* but, do output to dataset */
+  OUTPUT OUT=roaOutput n= mean= max= median= stddev= /autoname;
+  var roa;
+  by gvkey; /* without gvkey would give full sample statistics */
+run;
+
+/* there are some missing values for roa (missing net income or missing assets) 
+	we could drop these observations, but what if we want to keep our sample 'whole'?
+	-> add a 'where' clause to the data set being input
+*/
+
+proc means data=roaInputs (where= (roa ne .) ) NOPRINT; /* suppress output to screen */
+  /* but, do output to dataset */
+  OUTPUT OUT=roaOutput n= mean= max= median= stddev= /autoname;
+  var roa;
+  by gvkey; /* without gvkey would give full sample statistics */
+run;
+
+* note that roaInputs has 35151 rows, and that there were 34778 observations read 
+from the data set WORK.ROAINPUTS. */
+
